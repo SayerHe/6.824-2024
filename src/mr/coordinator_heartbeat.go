@@ -61,9 +61,7 @@ func (c *Coordinator) handleMap(w *worker, reply *HeartBeatReply) {
 	reply.TaskId = releaseMapTask.id
 	c.mapProcessingTasks[reply.TaskId] = releaseMapTask
 	c.mapIdleTasks = c.mapIdleTasks[1:]
-	//logger.Println("before map sig send")
 	c.stage.stageCh <- MapRelease_Sig
-	//logger.Println("after map sig send")
 	<-c.stage.returnCh
 	go c.asyncTaskTimer(10*time.Second, releaseMapTask.id, 0)
 	//logger.Printf("worker %d get map task %d\n", w.cookie, reply.TaskId)
@@ -72,7 +70,6 @@ func (c *Coordinator) handleMap(w *worker, reply *HeartBeatReply) {
 func (c *Coordinator) handleReduce(w *worker, reply *HeartBeatReply) {
 	releaseReduceTask := c.reduceIdleTasks[0]
 	w.t = releaseReduceTask
-	// delete assigned intermediatesFiles from cache
 	reply.TaskType = Reduce_Task
 	reply.Cookie = w.cookie
 	reply.FileName = releaseReduceTask.reduceTaskContent.fileNames
@@ -108,7 +105,6 @@ func (c *Coordinator) getWorker(cookie int) *worker {
 		c.mu.Unlock()
 	} else {
 		// only idle mapper can send heartbeat the coordinator
-		// inProcess mapper are busy with job
 		c.mu.Lock()
 		w = c.workers[cookie]
 		c.mu.Unlock()
